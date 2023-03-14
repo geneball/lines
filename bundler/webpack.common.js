@@ -5,7 +5,7 @@ const path = require('path')
 const WorkboxPlugin = require('workbox-webpack-plugin')
 
 module.exports = {
-    entry: path.resolve(__dirname, '../src/script.js'),
+    entry: path.resolve(__dirname, '../src/threeapp.js'),
     output:
     {
         filename: 'bundle.[contenthash].js',

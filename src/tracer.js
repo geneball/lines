@@ -4,6 +4,8 @@
 export class Tracer {
 	static ptsPath = './pts/'
 	static imgPath = './img/'
+	static XAdj = -5
+	static YAdj = 26
 	constructor( scene, camera, z, imgIdx, imgLyr, ptsLyr, svFn, closeFn ){
 		this.scene = scene
 		this.camera = camera
@@ -13,7 +15,9 @@ export class Tracer {
 		this.ptsLyr = ptsLyr
 		this.svFn = svFn
 		this.closeFn = closeFn
-		const texture = new THREE.TextureLoader().load( `${Tracer.imgPath}${this.nm}.png` )
+		let fnm = `${Tracer.imgPath}${this.nm}.png`
+		console.log( fnm )
+		const texture = new THREE.TextureLoader().load( fnm )
 		
 		const geometry = new THREE.PlaneGeometry( 1,1 )
 		//geometry.translate( 0, 0, this.z )
@@ -37,10 +41,12 @@ export class Tracer {
 		this.dragstart = new THREE.Vector2()
 		this.move = v3()
 		this.dragging = false
-		this.linewidth = 0.01
+		this.linewidth = 0.005
 		
 		const loader = new THREE.FileLoader()
-		loader.load( `${Tracer.ptsPath}_${this.nm}.pts`, this.onLoadPts.bind( this ), console.log )
+		fnm = `${Tracer.ptsPath}${this.nm}.pts`
+		console.log( fnm )
+		loader.load( fnm, this.onLoadPts.bind( this ), console.log )
 		
 		document.addEventListener( 'click', this.onClick.bind(this) )
 		document.addEventListener( 'keydown', this.onKeydown.bind( this ))
@@ -120,17 +126,27 @@ export class Tracer {
 			case 's':
 				this.savePts()
 				break
-			case 'X':
+			case 'E':
 				this.exit( false )
 				break
+			case 'X':
+			case 'x':
+				Tracer.XAdj += (evt.key=='X'? 1 : -1 )
+				console.log( `Adj: ${Tracer.XAdj},${Tracer.YAdj}` )
+				break
+			case 'Y':
+			case 'y':
+				Tracer.YAdj += (evt.key=='Y'? 1 : -1 )
+				console.log( `Adj: ${Tracer.XAdj},${Tracer.YAdj}` )
+				break
+				
 		}		
 	}
 	onMouseMove( evt ){
 		// calculate pointer position in normalized device coordinates
 		// (-1 to +1) for both components
-		const XAdj = 4, YAdj = 5
-		this.pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-		this.pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+		this.pointer.x = ( (event.clientX + Tracer.XAdj) / window.innerWidth ) * 2 - 1;
+		this.pointer.y = - ( (event.clientY + Tracer.YAdj)/ window.innerHeight ) * 2 + 1;
 		if (this.dragging){
 			this.move.x = this.pointer.x - this.dragstart.x
 			this.move.y = this.pointer.y - this.dragstart.y
@@ -157,14 +173,20 @@ export class Tracer {
 		this.selpts.length = 0
 	}
 	adjSel( dir ){
-		if ( this.selpts.length != 1 ) return
+		if ( this.selpts.length > 1 ) return
+		if ( this.selpts.length == 0 ){
+			this.toggleSelPt( this.pts[0] )
+			return
+		}
 		let sel = this.selpts[0]
-		let idx = this.pts.indexOf( sel )
 		this.toggleSelPt( sel )
-		this.toggleSelPt( this.pts[ idx + dir ] )
+
+		let idx = this.pts.indexOf( sel ) + dir
+		if ( idx >=0 && idx < this.pts.length )
+			this.toggleSelPt( this.pts[ idx ] )
 	}
 	adjWidth( dir ){
-		this.linewidth += dir * 0.01
+		this.linewidth += dir * 0.001
 		if ( this.selpts.length != 1 ) return
 		
 		let sel = this.selpts[0]
@@ -191,6 +213,8 @@ export class Tracer {
 			}
 			this.selpts.push( pt )
 		}
+		let iSel = this.pts.indexOf( this.selpts[0] )
+		if ( iSel >= 0 ) console.log( 'pt', iSel, ' w', this.selpts[0].linewidth )
 	}
 	addPt( loc ){
 		let pt = new THREE.Mesh( this.ptGeom, this.ptMat )
@@ -218,7 +242,9 @@ export class Tracer {
 			py = y
 		}
 
-		this.download( `${Tracer.ptsPath}${this.nm}.pts`, txt )
+		let fnm = `${this.nm}.pts`
+		console.log( fnm )
+		this.download( fnm, txt )
 		if (typeof this.svFn == 'function' ) this.svFn( pts )
 	}
 	download( filename, txt ) {
