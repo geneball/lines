@@ -4,6 +4,7 @@
 	import { LineView, Stroke, v3 } from './lines.js'
 	import { GUI } 					from 'three/addons/libs/lil-gui.module.min.js';
 	import { Tracer }				from './tracer.js'
+	import { err, msg, statusMsg, question } from './msg.js'
 
 class App {
 	static ptsPath = './pts/'
@@ -21,7 +22,8 @@ class App {
 		this.view2 = null
 		this.controls = null
 		this.renderer = null
-
+//	err( 'error message' )
+//	msg( 'got ' + question( 'DO YOU WANT?', 'explanation', ['yes','no','maybe'] ))
 		this.sizes = {
 			width: window.innerWidth,
 			height: window.innerHeight,
